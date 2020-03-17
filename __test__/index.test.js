@@ -65,6 +65,29 @@ describe('Pagination middleware', () => {
     expect(request.pagination.default).toStrictEqual({ limit: 20, offset: 0 })
   })
 
+  test('page transformation', () => {
+    // Avoid negative values
+    request.query.page = '-4'
+    pagination()(request, response, next)
+    expect(request.pagination.isEnable).toBe(true)
+    expect(request.pagination.current).toStrictEqual({ limit: 20, offset: 0 })
+    expect(request.pagination.default).toStrictEqual({ limit: 20, offset: 0 })
+
+    // Transform page to offset
+    request.query.page = '3'
+    pagination()(request, response, next)
+    expect(request.pagination.isEnable).toBe(true)
+    expect(request.pagination.current).toStrictEqual({ limit: 20, offset: 40 })
+    expect(request.pagination.default).toStrictEqual({ limit: 20, offset: 0 })
+
+    // If offset is present page should be ignored
+    request.query.offset = '55'
+    pagination()(request, response, next)
+    expect(request.pagination.isEnable).toBe(true)
+    expect(request.pagination.current).toStrictEqual({ limit: 20, offset: 55 })
+    expect(request.pagination.default).toStrictEqual({ limit: 20, offset: 0 })
+  })
+
   test('limit behaviour', () => {
     // Negative value
     request.query.limit = '-10'

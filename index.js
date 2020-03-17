@@ -18,18 +18,21 @@ module.exports = (configProvided = {}) => (req, res, next) => {
     default: { limit: config.min, offset: 0 }
   }
 
-  let { offset, limit } = req.query
+  let { offset, limit, page } = req.query
 
-  if (!offset && !limit) {
+  if (!offset && !limit && !page) {
     debug('No pagination required')
     return next()
   }
 
   offset = parseToPositiveInt(offset)
   limit = parseToPositiveInt(limit)
+  limit = parseValueInRange(limit, config.min, config.max)
+  page = parseToPositiveInt(page)
+  if (!offset && page) offset = (page - 1) * limit
 
   req.pagination.isEnable = true
-  req.pagination.current = { limit: parseValueInRange(limit, config.min, config.max), offset }
+  req.pagination.current = { limit, offset }
   debug(`Pagination defined: ${req.pagination}`)
   return next()
 }
